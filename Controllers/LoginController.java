@@ -1,15 +1,15 @@
-package Models;
+package Controllers;
 
 import Classes.*;
 
 import java.net.*;
 import java.io.*;
 
-public class LoginModel {
+public class LoginController {
 
     private String ip = "localhost";
     private int serverPort = 49152;
-    public LoginModel() {}
+    public LoginController() {}
 
     public String validateUsername(String username) {
         while (username == null) {}

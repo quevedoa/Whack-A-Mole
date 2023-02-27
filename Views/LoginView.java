@@ -1,6 +1,6 @@
 package Views;
 
-import Models.LoginModel;
+import Controllers.LoginController;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,7 +15,7 @@ public class LoginView {
     }
 
     private void body() {
-        LoginModel loginModel = new LoginModel();
+        LoginController loginController = new LoginController();
 
         JFrame loginView = new JFrame("Whack-A-Mole Login");
         loginView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -45,7 +45,7 @@ public class LoginView {
             public void actionPerformed(ActionEvent e) {
                 submitButton.setEnabled(false);
                 responseLabel.setText("");
-                String response = loginModel.validateUsername(usernameTextField.getText());
+                String response = loginController.validateUsername(usernameTextField.getText());
                 responseLabel.setText(response);
                 submitButton.setEnabled(true);
             }
