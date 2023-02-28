@@ -5,70 +5,80 @@ import Classes.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Array;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.HashMap;
 
+import Views.GameView;
 import org.apache.activemq.ActiveMQConnection;
 
 public class Server {
-    private Set<String> usernameDB;
-    private Set<Player> playerDB;
-    //= new HashSet<>();
-    private int socketPort = 49152;
-    private String topicURL = ActiveMQConnection.DEFAULT_BROKER_URL;
-    private String monsterQueue = "MONSTER_QUEUE";
+    private ArrayList<String> usernameDB;
+    private ArrayList<Player> playerDB;
+    private int loginSocketPort = 50000;
+    private int moveSocketPort = 55000;
+    public static String activeMQURL = ActiveMQConnection.DEFAULT_BROKER_URL;
+    public static String monsterQueue = "MONSTER_QUEUE";
+    public static String winnerQueue = "WINNER_QUEUE";
+    private int rows;
+    private int columns;
 
 
-    public Server() {
+    public Server(int rows, int columns) {
+        this.rows = rows;
+        this.columns = columns;
+
+        this.usernameDB = new ArrayList<>();
+        this.playerDB = new ArrayList<>();
+
         try {
-            ServerSocket listenSocket = new ServerSocket(socketPort);
+            ServerSocket loginServerSocket = new ServerSocket(loginSocketPort);
+            ServerSocket moveServerSocket = new ServerSocket(moveSocketPort);
             // Empezar hilo que agrega monstruos
+
             while (true) {
-                System.out.println("Connecting...");
-                Socket connectionSocket = listenSocket.accept();
-                Connection c = new Connection(connectionSocket, topicURL, monsterQueue);
+                System.out.println("Waiting for connections...");
+
+                Socket loginSocket = loginServerSocket.accept();
+                LoginConnection loginConnection = new LoginConnection(loginSocket, moveSocketPort, rows, columns, usernameDB, playerDB);
+                loginConnection.start();
+
+//                Socket moveSocket = moveServerSocket.accept();
+//                MoveConnection moveConnection = new MoveConnection();
+//                moveConnection.start();
             }
         } catch (IOException e) {
             System.out.println("Listen: " + e.getMessage());
         }
     }
 
-    public void connectLoginSocket() {
-        try {
-            ServerSocket listenSocket = new ServerSocket(socketPort);
-            while (true) {
-                System.out.println("Verifying login...");
-                Socket loginSocket = listenSocket.accept();
-                Connection connection = new Connection(loginSocket,topicURL,monsterQueue);
-                connection.start();
-            }
-        } catch (IOException e) {
-            System.out.println("Listen: " + e.getMessage());
-        }
+    public static void main(String args[]) {
+        Server server = new Server(3,3);
     }
-
-    public void addPlayer(Player jugador) {
-        this.playerDB.add(jugador);
-    }
-    public void addUsername(String username) {
-        this.usernameDB.add(username);
-    }
-
 }
 
-class Connection extends Thread {
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
+class LoginConnection extends Thread {
+    private DataInputStream in;
     private Socket connectionSocket;
-    private String topicURL;
-    private String monsterQueue;
+    private ArrayList<String> usernameDB;
+    private ArrayList<Player> playerDB;
+    private int rows;
+    private int columns;
+    private int moveSocketPort;
 
-    public Connection(Socket connectionSocket, String topicURL, String monsterQueue) {
+    public LoginConnection(Socket connectionSocket, int moveSocketPort, int rows, int columns, ArrayList<String> usernameDB, ArrayList<Player> playerDB) {
         try {
+            this.rows = rows;
+            this.columns = columns;
             this.connectionSocket = connectionSocket;
-            this.topicURL = topicURL;
-            this.monsterQueue = monsterQueue;
-            out = new ObjectOutputStream(connectionSocket.getOutputStream());
-            in = new ObjectInputStream(connectionSocket.getInputStream());
+            this.moveSocketPort = moveSocketPort;
+            this.usernameDB = usernameDB;
+            this.playerDB = playerDB;
+
+            in = new DataInputStream(connectionSocket.getInputStream());
+
         } catch (IOException e) {
             System.out.println("Connection:" + e.getMessage());
         }
@@ -77,19 +87,24 @@ class Connection extends Thread {
     @Override
     public void run() {
         try {
-            // an echo server
-            Object object = in.readObject();
-            if (object instanceof Player) {
+            String username = in.readUTF();
+            Player player;
 
-            } else if (object instanceof Move) {
-
+            if (!usernameDB.contains(username)) {
+                player = new Player(username);
+                usernameDB.add(username);
+                playerDB.add(player);
+            } else {
+                player = playerDB.get(usernameDB.indexOf(username));
             }
-            Player player = (Player) in.readObject();
-            String username = player.getUsername();
 
-            String[] response = validateUsername(username);
-            System.out.println("Message received from: " + connectionSocket.getRemoteSocketAddress());
-            out.writeUTF(username);
+            HashMap<String, String> addresses = new HashMap<>();
+            addresses.put("activeMQURL", Server.activeMQURL);
+            addresses.put("monsterQueue", Server.monsterQueue);
+            addresses.put("winnerQueue", Server.winnerQueue);
+            addresses.put("moveSocketPort", ""+moveSocketPort);
+
+            GameView gameView = new GameView(rows, columns, player, addresses);
 
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
@@ -106,15 +121,24 @@ class Connection extends Thread {
         }
 
     }
+}
 
-    public String[] validateUsername(String username) {
-        String[] ipSubjectResponse = new String[2];
+class MoveConnection extends Thread {
+    private ObjectInputStream in;
+    private Socket connectionSocket;
+    public MoveConnection(Socket connectionSocket) {
+        try {
+            this.connectionSocket = connectionSocket;
 
-//        if (!usernameDB.contains(username)) {
-//            usernameDB.add(username);
-//        } else {
-//
-//        }
-        return null;
+            in = new ObjectInputStream(connectionSocket.getInputStream());
+
+        } catch (IOException e) {
+            System.out.println("Connection:" + e.getMessage());
+        }
+    }
+
+    @Override
+    public void run() {
+
     }
 }

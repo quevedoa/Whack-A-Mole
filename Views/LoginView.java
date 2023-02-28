@@ -1,11 +1,14 @@
 package Views;
 
-import Controllers.LoginController;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 public class LoginView {
     private String user;
@@ -15,8 +18,6 @@ public class LoginView {
     }
 
     private void body() {
-        LoginController loginController = new LoginController();
-
         JFrame loginView = new JFrame("Whack-A-Mole Login");
         loginView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -29,25 +30,13 @@ public class LoginView {
         usernamePanel.add(usernameLabel);
         usernamePanel.add(usernameTextField);
 
-        JPanel responsePanel = new JPanel(new GridLayout(2, 1));
-        JLabel responseLabel = new JLabel();
-        responsePanel.add(responseLabel);
-
-//        JPanel ipPanel = new JPanel(new GridLayout(2, 1));
-//        JLabel ipLabel = new JLabel("IP:");
-//        JTextField ipTextField = new JTextField(20);
-//        ipPanel.add(ipLabel);
-//        ipPanel.add(ipTextField);
-
         JButton submitButton = new JButton("Entrar");
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                submitButton.setEnabled(false);
-                responseLabel.setText("");
-                String response = loginController.validateUsername(usernameTextField.getText());
-                responseLabel.setText(response);
-                submitButton.setEnabled(true);
+//                loginController.validateUsername(usernameTextField.getText());
+                validateUsername(usernameTextField.getText());
+                loginView.dispose();
             }
         });
 
@@ -55,7 +44,6 @@ public class LoginView {
         submitPanel.add(submitButton);
 
         panel.add(usernamePanel);
-//        panel.add(ipPanel);
         panel.add(submitPanel);
 
         loginView.add(panel);
@@ -65,9 +53,39 @@ public class LoginView {
         loginView.setVisible(true);
     }
 
-//    public static void main(String args[]) {
-//        Login lv = new Login();
-//    }
+    private void validateUsername(String username) {
+        String ip = "localhost";
+        int serverPort = 50000;
+
+        while (username == null) {}
+
+        Socket s = null;
+        try {
+            s = new Socket(ip, serverPort);
+
+            DataOutputStream out = new DataOutputStream(s.getOutputStream());
+            out.writeUTF(username);
+
+            s.close();
+
+        } catch (UnknownHostException e) {
+            System.out.println("Sock:" + e.getMessage());
+        } catch (EOFException e) {
+            System.out.println("EOF:" + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("IO:" + e.getMessage());
+        } finally {
+            if (s != null) try {
+                s.close();
+            } catch (IOException e) {
+                System.out.println("close:" + e.getMessage());
+            }
+        }
+    }
+
+    public static void main(String args[]) {
+        LoginView lv = new LoginView();
+    }
 
 }
 

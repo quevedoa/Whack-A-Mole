@@ -11,13 +11,17 @@ public class Player implements Serializable {
         this.playing = false;
         this.score = 0;
     }
-    public Player(String username, boolean playing, int score) {
-        this.username = username;
-        this.playing = playing;
-        this.score = 0;
-    }
+//    public Player(String username, boolean playing, int score) {
+//        this.username = username;
+//        this.playing = playing;
+//        this.score = 0;
+//    }
 
     public String getUsername() {
         return this.username;
+    }
+
+    public int getScore() {
+        return this.score;
     }
 }
