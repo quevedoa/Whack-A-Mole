@@ -1,12 +1,12 @@
 package Views;
 
+import Classes.Player;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -19,7 +19,7 @@ public class LoginView {
 
     private void body() {
         JFrame loginView = new JFrame("Whack-A-Mole Login");
-        loginView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        loginView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -64,16 +64,27 @@ public class LoginView {
             s = new Socket(ip, serverPort);
 
             DataOutputStream out = new DataOutputStream(s.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(s.getInputStream());
             out.writeUTF(username);
+
+            System.out.println("Before ins");
+
+            int moveSocketPort = (int) in.readObject();
+            String activeMQURL = (String) in.readObject();
+            String monsterQueue = (String) in.readObject();
+            String winnerQueue = (String) in.readObject();
+            int rows = (int) in.readObject();
+            int columns = (int) in.readObject();
+            Player player = (Player) in.readObject();
+
+            System.out.println("After ins");
+
+            new GameView(rows, columns, player, moveSocketPort, activeMQURL, monsterQueue, winnerQueue);
 
             s.close();
 
-        } catch (UnknownHostException e) {
-            System.out.println("Sock:" + e.getMessage());
-        } catch (EOFException e) {
-            System.out.println("EOF:" + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("IO:" + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Validate Username Error: " + e.getMessage());
         } finally {
             if (s != null) try {
                 s.close();
@@ -85,6 +96,7 @@ public class LoginView {
 
     public static void main(String args[]) {
         LoginView lv = new LoginView();
+        LoginView lv2 = new LoginView();
     }
 
 }

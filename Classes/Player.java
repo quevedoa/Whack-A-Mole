@@ -4,24 +4,25 @@ import java.io.Serializable;
 
 public class Player implements Serializable {
     private String username;
-    private boolean playing;
     private int score;
+    private int juegosGanados;
+    private boolean currentGameWinner;
     public Player(String username) {
         this.username = username;
-        this.playing = false;
         this.score = 0;
-    }
-//    public Player(String username, boolean playing, int score) {
-//        this.username = username;
-//        this.playing = playing;
-//        this.score = 0;
-//    }
-
-    public String getUsername() {
-        return this.username;
+        this.juegosGanados = 0;
+        this.currentGameWinner = false;
     }
 
+    public String getUsername() { return this.username; }
     public int getScore() {
         return this.score;
+    }
+    public int getJuegosGanados() { return this.juegosGanados; }
+    public boolean isCurrentGameWinner() { return this.currentGameWinner; }
+
+    public void givePoint() { this.score = this.score + 1; }
+    public void setCurrentGameWinner(boolean isWinner) {
+        this.currentGameWinner = isWinner;
     }
 }
