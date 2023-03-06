@@ -9,37 +9,23 @@ import javax.jms.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
-import java.io.DataInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Set;
 
 public class GameView {
     private Player player;
-    private int rows;
-    private int columns;
     private int ronda = 0;
-    private HashMap<String, Player> juegoActual;
 
     private int moveSocketPort;
     public GameView(int rows, int columns, Player player, int moveSocketPort,
-                    String activeMQURL, String topoQueue, String winnerTopic, HashMap<String, Player> juegoActual) {
-//        GameController controller = new GameController();
+                    String activeMQURL, String topoQueue, String winnerTopic) {
 
         this.player = player;
-        this.juegoActual = juegoActual;
 
         this.moveSocketPort = moveSocketPort;
 
-        this.rows = rows;
-        this.columns = columns;
-
         JFrame frame = new JFrame();
-//        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         frame.setTitle("Bienvenido " + player.getUsername());
         frame.setSize(500, 500);
@@ -52,6 +38,11 @@ public class GameView {
         JLabel scoreLabel = new JLabel("Intenta pegarle a los topos antes que los demás");
         scorePanel.add(scoreLabel);
 
+        JPanel labelPanel = new JPanel();
+        labelPanel.setLayout(new BoxLayout(labelPanel,BoxLayout.Y_AXIS));
+        labelPanel.add(ganadorDeRondaLabel);
+        labelPanel.add(scoreLabel);
+
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(rows, columns));
 
@@ -61,17 +52,13 @@ public class GameView {
             checkboxes[i] = new JCheckBox("Hole" + (i+1));
             int r = i/columns;
             int c = i%columns;
-            checkboxes[i].addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    JCheckBox checkBox = (JCheckBox) e.getSource();
-                    if (checkBox.isSelected()) {
-                        checkBox.setSelected(false);
-                        scoreLabel.setText("Pendejo no te mames");
-                    } else if (!checkBox.isSelected()) {
-                        System.out.println(checkBox.getText() + " was wacked!");
-                        sendMove(new Move(r,c,ronda));
-                    }
+            checkboxes[i].addActionListener( e -> {
+                JCheckBox checkBox = (JCheckBox) e.getSource();
+                if (checkBox.isSelected()) {
+                    checkBox.setSelected(false);
+                } else if (!checkBox.isSelected()) {
+                    System.out.println(checkBox.getText() + " was wacked!");
+                    sendMove(new Move(r,c,ronda));
                 }
             });
 
@@ -83,14 +70,15 @@ public class GameView {
             panel.add(checkboxPanel);
         }
 
-        // Add the panels to the window with a BorderLayout
-        frame.add(ganadorDeRondaLabel);
-        frame.add(scorePanel, BorderLayout.SOUTH);
-        frame.add(panel, BorderLayout.CENTER);
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.add(panel, BorderLayout.CENTER);
+        contentPanel.add(labelPanel,BorderLayout.CENTER);
 
-        // Show the window
+        frame.add(contentPanel);
         frame.setVisible(true);
 
+        // Hilo que checa el tópico de topos y actualiza juego
         Thread thread1 = new Thread(() -> {
             boolean state = true;
             try {
@@ -103,30 +91,14 @@ public class GameView {
                 ObjectMessage moleMessage;
                 Move moleLocation;
 
-//                MessageConsumer winnerMessageConsumer;
-//                ObjectMessage playerMessage;
-//                Player winnerPlayer;
-
                 Session session = connection.createSession(false /*Transacter*/, Session.AUTO_ACKNOWLEDGE);
 
                 Topic topoTopic = session.createTopic(topoQueue);
                 topoMessageConsumer = session.createConsumer(topoTopic);
 
-//                Topic winnerTopic = session.createTopic(winnerQueue);
-//                winnerMessageConsumer = session.createConsumer(winnerTopic);
-
                 while (true) {
                     moleMessage = (ObjectMessage) topoMessageConsumer.receive();
                     moleLocation = (Move) moleMessage.getObject();
-
-//                    System.out.println("pre atorada");
-//                    playerMessage = (ObjectMessage) winnerMessageConsumer.receive();
-//                    winnerPlayer = (Player) playerMessage.getObject();
-//                    System.out.println("post atorada");
-//
-//                    if (this.player == winnerPlayer) {
-//                        scoreLabel.setText(""+winnerPlayer.getScore());
-//                    }
 
                     this.ronda = moleLocation.getRonda();
 
@@ -137,12 +109,14 @@ public class GameView {
 
                     clearCheckboxes(checkboxes);
                     checkboxes[index].setSelected(state);
-//                    state = !state;
                 }
             } catch (Exception e) {
                 System.out.println(e);
             }
         });
+
+        // Hilo que checa el topico de ganadores y actualiza los puntajes
+        // también avisa si alguien ya ganó
         Thread thread2 = new Thread(() -> {
             try {
                 ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(activeMQURL);
@@ -171,7 +145,7 @@ public class GameView {
                         scoreLabel.setText("Ganó " + winnerPlayer.getUsername() + "!!!!");
                         this.player.reset();
                     } else {
-                        ganadorDeRondaLabel.setText("Esta ronda la ganó " + winnerPlayer.getUsername());
+                        ganadorDeRondaLabel.setText("Ronda " + ronda + " la ganó " + winnerPlayer.getUsername());
                         scoreLabel.setText("Juegos Ganados: " + this.player.getJuegosGanados() + " | Score: " + this.player.getScore());
                     }
                 }
@@ -188,12 +162,11 @@ public class GameView {
         int serverPort = moveSocketPort; // Estos los deberían mandar desde loginView
 
         // Chequemos que el username está bien
-        Socket s = null;
+        Socket s;
 
         try {
             s = new Socket(ip, serverPort);
 
-            DataInputStream in = new DataInputStream(s.getInputStream());
             ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
 
             out.writeObject(move);
@@ -209,10 +182,5 @@ public class GameView {
         for (int i = 0; i < checkBoxes.length; i++) {
             checkBoxes[i].setSelected(false);
         }
-    }
-
-    public static void main(String[] args) {
-
-//        GameView checkboxGrid = new GameView(3,3,);
     }
 }

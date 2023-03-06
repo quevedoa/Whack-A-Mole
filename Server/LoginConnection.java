@@ -6,34 +6,31 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
 
 public class LoginConnection extends Thread {
     private DataInputStream in;
     private ObjectOutputStream out;
     private Socket connectionSocket;
-    private ArrayList<String> usernameDB;
-    private ArrayList<Player> playerDB;
-//    private Set<Player> juegoActual;
+    String activeMQURL;
+    String topoTopico;
+    String winnerTopic;
     private HashMap<String, Player> juegoActual;
     private int rows;
     private int columns;
     private int moveSocketPort;
 
 
-    public LoginConnection(Socket connectionSocket, int moveSocketPort, int rows, int columns,
-                           ArrayList<String> usernameDB, ArrayList<Player> playerDB, HashMap<String, Player>juegoActual) {
+    public LoginConnection(Socket connectionSocket, int moveSocketPort, String activeMQURL, String topoTopico, String winnerTopic, int rows, int columns, HashMap<String, Player>juegoActual) {
         try {
             this.juegoActual = juegoActual;
             this.rows = rows;
             this.columns = columns;
             this.connectionSocket = connectionSocket;
             this.moveSocketPort = moveSocketPort;
-            this.usernameDB = usernameDB;
-            this.playerDB = playerDB;
+            this.activeMQURL = activeMQURL;
+            this.topoTopico = topoTopico;
+            this.winnerTopic = winnerTopic;
 
             in = new DataInputStream(connectionSocket.getInputStream());
             out = new ObjectOutputStream(connectionSocket.getOutputStream());
@@ -47,20 +44,7 @@ public class LoginConnection extends Thread {
     public void run() {
         try {
             String username = in.readUTF();
-            Player player = null;
-
-//            Iterator<Player> iterator = juegoActual.iterator();
-//            while(iterator.hasNext()) {
-//                Player currentPlayer = iterator.next();
-//                if (currentPlayer.getUsername().equals(username)) {
-//                    player = currentPlayer;
-//                    break;
-//                }
-//            }
-//            if (player == null) {
-//                player = new Player(username);
-//                this.juegoActual.add(player);
-//            }
+            Player player;
 
             if (juegoActual.containsKey(username)) {
                 player = juegoActual.get(username);
@@ -69,18 +53,10 @@ public class LoginConnection extends Thread {
                 juegoActual.put(username,player);
             }
 
-//            if (!usernameDB.contains(username)) {
-//                player = new Player(username);
-//                usernameDB.add(username);
-//                playerDB.add(player);
-//            } else {
-//                player = playerDB.get(usernameDB.indexOf(username));
-//            }
-
             out.writeObject(moveSocketPort);
-            out.writeObject(Server.activeMQURL);
-            out.writeObject(Server.monsterQueue);
-            out.writeObject(Server.winnerTopic);
+            out.writeObject(activeMQURL);
+            out.writeObject(topoTopico);
+            out.writeObject(winnerTopic);
             out.writeObject(rows);
             out.writeObject(columns);
             out.writeObject(player);

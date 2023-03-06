@@ -4,24 +4,16 @@ import Classes.Player;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Set;
 
 public class LoginView {
-    private String user;
     public LoginView() {
-        this.user = null;
         body();
     }
 
     private void body() {
         JFrame loginView = new JFrame("Whack-A-Mole Login");
-//        loginView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -33,13 +25,9 @@ public class LoginView {
         usernamePanel.add(usernameTextField);
 
         JButton submitButton = new JButton("Entrar");
-        submitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-//                loginController.validateUsername(usernameTextField.getText());
-                validateUsername(usernameTextField.getText());
-                loginView.dispose();
-            }
+        submitButton.addActionListener( e -> {
+            validateUsername(usernameTextField.getText());
+            loginView.dispose();
         });
 
         JPanel submitPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -69,8 +57,6 @@ public class LoginView {
             ObjectInputStream in = new ObjectInputStream(s.getInputStream());
             out.writeUTF(username);
 
-            System.out.println("Before ins");
-
             int moveSocketPort = (int) in.readObject();
             String activeMQURL = (String) in.readObject();
             String monsterQueue = (String) in.readObject();
@@ -78,11 +64,8 @@ public class LoginView {
             int rows = (int) in.readObject();
             int columns = (int) in.readObject();
             Player player = (Player) in.readObject();
-            HashMap<String, Player> juegoActual = (HashMap<String, Player>) in.readObject();
 
-            System.out.println("After ins");
-
-            new GameView(rows, columns, player, moveSocketPort, activeMQURL, monsterQueue, winnerTopic, juegoActual);
+            new GameView(rows, columns, player, moveSocketPort, activeMQURL, monsterQueue, winnerTopic);
 
             s.close();
 
@@ -98,9 +81,8 @@ public class LoginView {
     }
 
     public static void main(String args[]) {
-        LoginView lv = new LoginView();
-        LoginView lv2 = new LoginView();
+        new LoginView();
+        new LoginView();
     }
-
 }
 

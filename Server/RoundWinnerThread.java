@@ -7,16 +7,21 @@ import Classes.Player;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 import java.util.HashMap;
-import java.util.Set;
 
 public class RoundWinnerThread extends Thread {
     private HashMap<String, Player> juegoActual;
+    String activeMQURL;
+    String moveQueue;
+    String winnerTopic;
     int ronda;
     int maxScore;
     boolean existeGanadorDeRonda;
 
-    public RoundWinnerThread(HashMap<String, Player> juegoActual, int maxScore) {
+    public RoundWinnerThread(HashMap<String, Player> juegoActual, int maxScore, String activeMQURL, String moveQueue, String winnerTopic) {
         this.juegoActual = juegoActual;
+        this.activeMQURL = activeMQURL;
+        this.moveQueue = moveQueue;
+        this.winnerTopic = winnerTopic;
         this.maxScore = maxScore;
         this.ronda = -1;
         this.existeGanadorDeRonda = false;
@@ -32,18 +37,18 @@ public class RoundWinnerThread extends Thread {
         Move move;
 
         try {
-            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(Server.activeMQURL);
+            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(activeMQURL);
             connectionFactory.setTrustAllPackages(true);
             Connection connection = connectionFactory.createConnection();
             connection.start();
 
             Session session = connection.createSession(false /*Transacter*/, Session.AUTO_ACKNOWLEDGE);
 
-            Destination sendDestination = session.createQueue(Server.moveQueue);
+            Destination sendDestination = session.createQueue(moveQueue);
             moveMessageConsumer = session.createConsumer(sendDestination);
 
-            Topic winnerTopic = session.createTopic(Server.winnerTopic);
-            winnerMessageProducer = session.createProducer(winnerTopic);
+            Topic winnerTopicDestination = session.createTopic(winnerTopic);
+            winnerMessageProducer = session.createProducer(winnerTopicDestination);
             ObjectMessage winnerMessage;
 
             while (true) {
@@ -66,7 +71,6 @@ public class RoundWinnerThread extends Thread {
                     winnerMessageProducer.send(winnerMessage);
 
                     juegoActual.put(player.getUsername(),player);
-                    System.out.println("TAMANO: " + juegoActual.size());
                 }
             }
 

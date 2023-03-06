@@ -10,22 +10,16 @@ import javax.jms.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Iterator;
 
 public class MoveConnection extends Thread {
     private int moveSocketPort;
-    private int numJuego;
-    private int maxScore;
-    private HashMap<String, Player> juegoActual;
-    private Player ganadorDeRonda;
-    public MoveConnection(int moveSocketPort, HashMap<String, Player> juegoActual, Player ganadorDeRonda, int maxScore, int numJuego) {
-        this.maxScore = maxScore;
-        this.juegoActual = juegoActual;
-        this.ganadorDeRonda = ganadorDeRonda;
+    private String activeMQURL;
+    private String moveQueue;
+
+    public MoveConnection(int moveSocketPort, String activeMQURL, String moveQueue) {
         this.moveSocketPort = moveSocketPort;
-        this.numJuego = numJuego;
+        this.activeMQURL = activeMQURL;
+        this.moveQueue = moveQueue;
     }
 
     @Override
@@ -34,7 +28,7 @@ public class MoveConnection extends Thread {
             ServerSocket moveServerSocket = new ServerSocket(moveSocketPort);
             while (true) {
                 Socket moveSocket = moveServerSocket.accept();
-                RegisterMoveThread registerMove = new RegisterMoveThread(moveSocket, juegoActual, ganadorDeRonda, maxScore);
+                RegisterMoveThread registerMove = new RegisterMoveThread(moveSocket, activeMQURL, moveQueue);
                 registerMove.start();
             }
         } catch (IOException e) {
@@ -45,18 +39,14 @@ public class MoveConnection extends Thread {
 
 class RegisterMoveThread extends Thread {
     private ObjectInputStream in;
-    private DataOutputStream out;
-    private Socket socket;
-    private HashMap<String, Player> juegoActual;
-    private Player ganadorDeRonda;
-    private int maxScore;
-    public RegisterMoveThread(Socket socket, HashMap<String, Player> juegoActual, Player ganadorDeRonda, int maxScore) {
+    private String activeMQURL;
+    private String moveQueue;
+
+    public RegisterMoveThread(Socket socket, String activeMQURL, String moveQueue) {
+        this.activeMQURL = activeMQURL;
+        this.moveQueue = moveQueue;
+
         try {
-            this.juegoActual = juegoActual;
-            this.ganadorDeRonda = ganadorDeRonda;
-            this.socket = socket;
-            this.maxScore = maxScore;
-            out = new DataOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
         } catch (IOException e) {
             System.out.println("Register Move Connection Error:" + e.getMessage());
@@ -69,22 +59,13 @@ class RegisterMoveThread extends Thread {
             Move move = (Move) in.readObject();
             Player player = (Player) in.readObject();
 
-            // Checar si alguien ganó
-//                player.givePoint();
-//                int playerScore = player.getScore();
-//                if (playerScore >= maxScore) {
-//                    player.setCurrentGameWinner(true);
-//                }
-//                juegoActual.add(player);
-
-            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(Server.activeMQURL);
+            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(activeMQURL);
             connectionFactory.setTrustAllPackages(true);
             Connection connection = connectionFactory.createConnection();
             connection.start();
 
             Session session = connection.createSession(false /*Transacter*/, Session.AUTO_ACKNOWLEDGE);
-//                Topic sendDestination = session.createTopic(Server.winnerQueue);
-            Destination sendDestination = session.createQueue(Server.moveQueue);
+            Destination sendDestination = session.createQueue(moveQueue);
             MessageProducer messageProducer = session.createProducer(sendDestination);
 
             ObjectMessage movimiento = session.createObjectMessage();

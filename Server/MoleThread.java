@@ -3,25 +3,20 @@ package Server;
 import javax.jms.*;
 
 import Classes.Move;
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-import javax.jms.JMSException;
-import java.io.Serializable;
 import java.util.Random;
 
 public class MoleThread extends Thread {
     private String url;
     private String topicSubject;
-    private int numJuego;
     private int numTopo;
     private int row;
     private int col;
     private Random rand = new Random();
-    public MoleThread(String url, String topicSubject, int numJuego, int row, int col) {
+    public MoleThread(String url, String topicSubject, int row, int col) {
         this.url = url;
         this.topicSubject = topicSubject;
-        this.numJuego = numJuego;
         this.row = row;
         this.col = col;
         this.numTopo = 0;
