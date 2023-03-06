@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Set;
 
 public class LoginView {
     private String user;
@@ -72,14 +73,15 @@ public class LoginView {
             int moveSocketPort = (int) in.readObject();
             String activeMQURL = (String) in.readObject();
             String monsterQueue = (String) in.readObject();
-            String winnerQueue = (String) in.readObject();
+            String winnerTopic = (String) in.readObject();
             int rows = (int) in.readObject();
             int columns = (int) in.readObject();
             Player player = (Player) in.readObject();
+            Set<Player> juegoActual = (Set<Player>) in.readObject();
 
             System.out.println("After ins");
 
-            new GameView(rows, columns, player, moveSocketPort, activeMQURL, monsterQueue, winnerQueue);
+            new GameView(rows, columns, player, moveSocketPort, activeMQURL, monsterQueue, winnerTopic, juegoActual);
 
             s.close();
 

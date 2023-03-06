@@ -5,13 +5,10 @@ import Classes.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.Array;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.ArrayList;
-import java.util.HashMap;
 
-import Views.GameView;
 import org.apache.activemq.ActiveMQConnection;
 
 public class Server {
@@ -24,10 +21,11 @@ public class Server {
     private int moveSocketPort = 55000;
     public static String activeMQURL = ActiveMQConnection.DEFAULT_BROKER_URL;
     public static String monsterQueue = "MONSTER_QUEUE";
-    public static String winnerQueue = "WINNER_QUEUE";
+    public static String moveQueue = "MOVE_QUEUE";
+    public static String winnerTopic = "WINNER_TOPIC";
     private int rows;
     private int columns;
-    private int maxScore = 10;
+    private int maxScore = 3;
     private int numJuego;
 
 
@@ -47,6 +45,9 @@ public class Server {
             MoveConnection moveConnection = new MoveConnection(moveSocketPort, juegoActual, ganadorDeRonda, maxScore, numJuego);
             moveConnection.start();
 
+            RoundWinnerThread roundWinnerThread = new RoundWinnerThread(juegoActual, maxScore);
+            roundWinnerThread.start();
+
             ServerSocket loginServerSocket = new ServerSocket(loginSocketPort);
 
             // Echamos a andar hilo que solo hace topos
@@ -58,7 +59,7 @@ public class Server {
                 System.out.println(usernameDB);
 
                 Socket loginSocket = loginServerSocket.accept();
-                LoginConnection loginConnection = new LoginConnection(loginSocket, moveSocketPort, rows, columns, usernameDB, playerDB, this.juegoActual);
+                LoginConnection loginConnection = new LoginConnection(loginSocket, moveSocketPort, rows, columns, usernameDB, playerDB, juegoActual);
                 loginConnection.start();
             }
         } catch (IOException e) {
@@ -66,11 +67,7 @@ public class Server {
         }
     }
 
-    public void check() {
-
-    }
-
     public static void main(String args[]) {
-        Server server = new Server(3,3);
+        Server server = new Server(2,2);
     }
 }

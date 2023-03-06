@@ -14,6 +14,7 @@ public class MoleThread extends Thread {
     private String url;
     private String topicSubject;
     private int numJuego;
+    private int numTopo;
     private int row;
     private int col;
     private Random rand = new Random();
@@ -23,6 +24,7 @@ public class MoleThread extends Thread {
         this.numJuego = numJuego;
         this.row = row;
         this.col = col;
+        this.numTopo = 0;
     }
 
     @Override
@@ -41,12 +43,14 @@ public class MoleThread extends Thread {
             messageProducer = session.createProducer(sendDestination);
 
             while (true) {
-                Move nextMove = new Move(rand.nextInt(row), rand.nextInt(col));
+                Move nextMove = new Move(rand.nextInt(row), rand.nextInt(col), numTopo);
+
                 mole = session.createObjectMessage();
                 mole.setObject(nextMove);
                 messageProducer.send(mole);
 
-                Thread.sleep(5000);
+                Thread.sleep(3000);
+                numTopo = numTopo+1;
             }
 
         } catch (Exception e) {

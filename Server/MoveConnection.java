@@ -3,7 +3,6 @@ package Server;
 import Classes.Move;
 import Classes.Player;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.*;
@@ -11,8 +10,6 @@ import javax.jms.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Set;
 import java.util.Iterator;
 
@@ -72,32 +69,28 @@ class RegisterMoveThread extends Thread {
             Player player = (Player) in.readObject();
 
             // Checar si alguien ganó
-            if (!alguienGano(juegoActual)) {
-                player.givePoint();
-                int playerScore = player.getScore();
-                if (playerScore >= maxScore) {
-                    player.setCurrentGameWinner(true);
-                }
-                juegoActual.add(player);
+//                player.givePoint();
+//                int playerScore = player.getScore();
+//                if (playerScore >= maxScore) {
+//                    player.setCurrentGameWinner(true);
+//                }
+//                juegoActual.add(player);
 
-                if (ganadorDeRonda == null) {
-                    ganadorDeRonda = player;
-                    ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(Server.activeMQURL);
-                    connectionFactory.setTrustAllPackages(true);
-                    Connection connection = connectionFactory.createConnection();
-                    connection.start();
+            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(Server.activeMQURL);
+            connectionFactory.setTrustAllPackages(true);
+            Connection connection = connectionFactory.createConnection();
+            connection.start();
 
-                    Session session = connection.createSession(false /*Transacter*/, Session.AUTO_ACKNOWLEDGE);
-                    Topic sendDestination = session.createTopic(Server.winnerQueue);
-                    MessageProducer messageProducer = session.createProducer(sendDestination);
+            Session session = connection.createSession(false /*Transacter*/, Session.AUTO_ACKNOWLEDGE);
+//                Topic sendDestination = session.createTopic(Server.winnerQueue);
+            Destination sendDestination = session.createQueue(Server.moveQueue);
+            MessageProducer messageProducer = session.createProducer(sendDestination);
 
-                    ObjectMessage posibleGanador = session.createObjectMessage();
-                    posibleGanador.setObject(player);
-                    messageProducer.send(posibleGanador);
-                    ganadorDeRonda = null;
-                }
+            ObjectMessage movimiento = session.createObjectMessage();
+            Object[] movimientoTupla = {player,move};
+            movimiento.setObject(movimientoTupla);
+            messageProducer.send(movimiento);
 
-            }
         } catch (Exception e) {
             System.out.println(e);
         }

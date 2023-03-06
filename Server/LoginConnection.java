@@ -1,15 +1,13 @@
 package Server;
 
 import Classes.Player;
-import Views.GameView;
 
 import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Set;
 
 public class LoginConnection extends Thread {
@@ -47,25 +45,37 @@ public class LoginConnection extends Thread {
     public void run() {
         try {
             String username = in.readUTF();
-            Player player;
+            Player player = null;
 
-            if (!usernameDB.contains(username)) {
+            Iterator<Player> iterator = juegoActual.iterator();
+            while(iterator.hasNext()) {
+                Player currentPlayer = iterator.next();
+                if (currentPlayer.getUsername().equals(username)) {
+                    player = currentPlayer;
+                    break;
+                }
+            }
+            if (player == null) {
                 player = new Player(username);
-                usernameDB.add(username);
-                playerDB.add(player);
-            } else {
-                player = playerDB.get(usernameDB.indexOf(username));
+                this.juegoActual.add(player);
             }
 
-            this.juegoActual.add(player);
+//            if (!usernameDB.contains(username)) {
+//                player = new Player(username);
+//                usernameDB.add(username);
+//                playerDB.add(player);
+//            } else {
+//                player = playerDB.get(usernameDB.indexOf(username));
+//            }
 
             out.writeObject(moveSocketPort);
             out.writeObject(Server.activeMQURL);
             out.writeObject(Server.monsterQueue);
-            out.writeObject(Server.winnerQueue);
+            out.writeObject(Server.winnerTopic);
             out.writeObject(rows);
             out.writeObject(columns);
             out.writeObject(player);
+            out.writeObject(juegoActual);
 
         } catch (Exception e) {
             System.out.println(e);

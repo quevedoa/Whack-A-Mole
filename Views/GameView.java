@@ -2,9 +2,7 @@ package Views;
 
 import Classes.Move;
 import Classes.Player;
-import Controllers.GameController;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.*;
@@ -13,28 +11,26 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 
 import java.io.DataInputStream;
-import java.io.EOFException;
-import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.HashMap;
+import java.util.Set;
 
 public class GameView {
     private Player player;
     private int rows;
     private int columns;
+    private int ronda = 0;
+    private Set<Player> juegoActual;
 
     private int moveSocketPort;
     public GameView(int rows, int columns, Player player, int moveSocketPort,
-                    String activeMQURL, String topoQueue, String winnerQueue) {
+                    String activeMQURL, String topoQueue, String winnerTopic, Set<Player> juegoActual) {
 //        GameController controller = new GameController();
 
         this.player = player;
+        this.juegoActual = juegoActual;
 
         this.moveSocketPort = moveSocketPort;
 
@@ -47,8 +43,12 @@ public class GameView {
         frame.setTitle("Bienvenido " + player.getUsername());
         frame.setSize(500, 500);
 
+        JPanel ganadorDeRondaPanel = new JPanel();
+        JLabel ganadorDeRondaLabel = new JLabel();
+        ganadorDeRondaPanel.add(ganadorDeRondaLabel);
+
         JPanel scorePanel = new JPanel();
-        JLabel scoreLabel = new JLabel("Score: " + player.getScore());
+        JLabel scoreLabel = new JLabel("Intenta pegarle a los topos antes que los demás");
         scorePanel.add(scoreLabel);
 
         JPanel panel = new JPanel();
@@ -64,9 +64,12 @@ public class GameView {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     JCheckBox checkBox = (JCheckBox) e.getSource();
-                    if (!checkBox.isSelected()) {
+                    if (checkBox.isSelected()) {
+                        checkBox.setSelected(false);
+                        scoreLabel.setText("Pendejo no te mames");
+                    } else if (!checkBox.isSelected()) {
                         System.out.println(checkBox.getText() + " was wacked!");
-                        sendMove(new Move(r,c));
+                        sendMove(new Move(r,c,ronda));
                     }
                 }
             });
@@ -80,6 +83,7 @@ public class GameView {
         }
 
         // Add the panels to the window with a BorderLayout
+        frame.add(ganadorDeRondaLabel);
         frame.add(scorePanel, BorderLayout.SOUTH);
         frame.add(panel, BorderLayout.CENTER);
 
@@ -123,6 +127,8 @@ public class GameView {
 //                        scoreLabel.setText(""+winnerPlayer.getScore());
 //                    }
 
+                    this.ronda = moleLocation.getRonda();
+
                     int row = moleLocation.getRow();
                     int col = moleLocation.getColumn();
 
@@ -149,21 +155,24 @@ public class GameView {
 
                 Session session = connection.createSession(false /*Transacter*/, Session.AUTO_ACKNOWLEDGE);
 
-                Topic winnerTopic = session.createTopic(winnerQueue);
-                winnerMessageConsumer = session.createConsumer(winnerTopic);
+                Topic topic = session.createTopic(winnerTopic);
+                winnerMessageConsumer = session.createConsumer(topic);
 
                 while (true) {
-
-                    System.out.println("pre atorada");
                     playerMessage = (ObjectMessage) winnerMessageConsumer.receive();
                     winnerPlayer = (Player) playerMessage.getObject();
-                    System.out.println("post atorada");
-                    System.out.println("Winner Player Score: " + winnerPlayer.getScore());
 
-                    scoreLabel.setText("Score: " + winnerPlayer.getScore());
-//                    if (this.player == winnerPlayer) {
-//                        scoreLabel.setText(""+winnerPlayer.getScore());
-//                    }
+                    if (winnerPlayer.getUsername().equals(this.player.getUsername())) {
+                        this.player = winnerPlayer;
+                    }
+
+                    if (winnerPlayer.isCurrentGameWinner()) {
+                        scoreLabel.setText("Ganó " + winnerPlayer.getUsername() + "!!!!");
+                        this.player.reset();
+                    } else {
+                        ganadorDeRondaLabel.setText("Esta ronda la ganó " + winnerPlayer.getUsername());
+                        scoreLabel.setText("Juegos Ganados: " + this.player.getJuegosGanados() + " | Score: " + this.player.getScore());
+                    }
                 }
             } catch (Exception e) {
                 System.out.println(e);

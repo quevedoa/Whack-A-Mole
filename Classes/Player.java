@@ -14,6 +14,11 @@ public class Player implements Serializable {
         this.currentGameWinner = false;
     }
 
+    public void reset() {
+        currentGameWinner = false;
+        score = 0;
+    }
+
     public String getUsername() { return this.username; }
     public int getScore() {
         return this.score;
@@ -22,6 +27,7 @@ public class Player implements Serializable {
     public boolean isCurrentGameWinner() { return this.currentGameWinner; }
 
     public void givePoint() { this.score = this.score + 1; }
+    public void giveJuego() { this.juegosGanados = this.juegosGanados + 1; };
     public void setCurrentGameWinner(boolean isWinner) {
         this.currentGameWinner = isWinner;
     }
