@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Set;
 
 public class LoginView {
@@ -77,7 +78,7 @@ public class LoginView {
             int rows = (int) in.readObject();
             int columns = (int) in.readObject();
             Player player = (Player) in.readObject();
-            Set<Player> juegoActual = (Set<Player>) in.readObject();
+            HashMap<String, Player> juegoActual = (HashMap<String, Player>) in.readObject();
 
             System.out.println("After ins");
 

@@ -6,15 +6,16 @@ import Classes.Move;
 import Classes.Player;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
+import java.util.HashMap;
 import java.util.Set;
 
 public class RoundWinnerThread extends Thread {
-    private Set<Player> juegoActual;
+    private HashMap<String, Player> juegoActual;
     int ronda;
     int maxScore;
     boolean existeGanadorDeRonda;
 
-    public RoundWinnerThread(Set<Player> juegoActual, int maxScore) {
+    public RoundWinnerThread(HashMap<String, Player> juegoActual, int maxScore) {
         this.juegoActual = juegoActual;
         this.maxScore = maxScore;
         this.ronda = -1;
@@ -64,7 +65,7 @@ public class RoundWinnerThread extends Thread {
                     winnerMessage.setObject(player);
                     winnerMessageProducer.send(winnerMessage);
 
-                    juegoActual.add(player);
+                    juegoActual.put(player.getUsername(),player);
                     System.out.println("TAMANO: " + juegoActual.size());
                 }
             }

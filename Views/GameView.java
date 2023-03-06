@@ -15,6 +15,7 @@ import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.Set;
 
 public class GameView {
@@ -22,11 +23,11 @@ public class GameView {
     private int rows;
     private int columns;
     private int ronda = 0;
-    private Set<Player> juegoActual;
+    private HashMap<String, Player> juegoActual;
 
     private int moveSocketPort;
     public GameView(int rows, int columns, Player player, int moveSocketPort,
-                    String activeMQURL, String topoQueue, String winnerTopic, Set<Player> juegoActual) {
+                    String activeMQURL, String topoQueue, String winnerTopic, HashMap<String, Player> juegoActual) {
 //        GameController controller = new GameController();
 
         this.player = player;

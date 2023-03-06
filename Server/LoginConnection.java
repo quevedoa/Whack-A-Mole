@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -16,14 +17,15 @@ public class LoginConnection extends Thread {
     private Socket connectionSocket;
     private ArrayList<String> usernameDB;
     private ArrayList<Player> playerDB;
-    private Set<Player> juegoActual;
+//    private Set<Player> juegoActual;
+    private HashMap<String, Player> juegoActual;
     private int rows;
     private int columns;
     private int moveSocketPort;
 
 
     public LoginConnection(Socket connectionSocket, int moveSocketPort, int rows, int columns,
-                           ArrayList<String> usernameDB, ArrayList<Player> playerDB, Set<Player> juegoActual) {
+                           ArrayList<String> usernameDB, ArrayList<Player> playerDB, HashMap<String, Player>juegoActual) {
         try {
             this.juegoActual = juegoActual;
             this.rows = rows;
@@ -47,17 +49,24 @@ public class LoginConnection extends Thread {
             String username = in.readUTF();
             Player player = null;
 
-            Iterator<Player> iterator = juegoActual.iterator();
-            while(iterator.hasNext()) {
-                Player currentPlayer = iterator.next();
-                if (currentPlayer.getUsername().equals(username)) {
-                    player = currentPlayer;
-                    break;
-                }
-            }
-            if (player == null) {
+//            Iterator<Player> iterator = juegoActual.iterator();
+//            while(iterator.hasNext()) {
+//                Player currentPlayer = iterator.next();
+//                if (currentPlayer.getUsername().equals(username)) {
+//                    player = currentPlayer;
+//                    break;
+//                }
+//            }
+//            if (player == null) {
+//                player = new Player(username);
+//                this.juegoActual.add(player);
+//            }
+
+            if (juegoActual.containsKey(username)) {
+                player = juegoActual.get(username);
+            } else {
                 player = new Player(username);
-                this.juegoActual.add(player);
+                juegoActual.put(username,player);
             }
 
 //            if (!usernameDB.contains(username)) {

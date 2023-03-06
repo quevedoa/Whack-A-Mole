@@ -5,6 +5,7 @@ import Classes.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.ArrayList;
@@ -13,7 +14,8 @@ import org.apache.activemq.ActiveMQConnection;
 
 public class Server {
 //    private HashMap<Integer, ArrayList<Player>> juegos;
-    private Set<Player> juegoActual;
+//    private Set<Player> juegoActual;
+    private HashMap<String, Player> juegoActual;
     private Player ganadorDeRonda = null;
     private ArrayList<String> usernameDB;
     private ArrayList<Player> playerDB;
@@ -31,7 +33,8 @@ public class Server {
 
 
     public Server(int rows, int columns) {
-        this.juegoActual = new HashSet<>();
+//        this.juegoActual = new HashSet<>();
+        this.juegoActual = new HashMap<>();
 
         this.rows = rows;
         this.columns = columns;

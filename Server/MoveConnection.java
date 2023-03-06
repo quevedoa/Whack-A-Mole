@@ -10,6 +10,7 @@ import javax.jms.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.Iterator;
 
@@ -17,9 +18,9 @@ public class MoveConnection extends Thread {
     private int moveSocketPort;
     private int numJuego;
     private int maxScore;
-    private Set<Player> juegoActual;
+    private HashMap<String, Player> juegoActual;
     private Player ganadorDeRonda;
-    public MoveConnection(int moveSocketPort, Set<Player> juegoActual, Player ganadorDeRonda, int maxScore, int numJuego) {
+    public MoveConnection(int moveSocketPort, HashMap<String, Player> juegoActual, Player ganadorDeRonda, int maxScore, int numJuego) {
         this.maxScore = maxScore;
         this.juegoActual = juegoActual;
         this.ganadorDeRonda = ganadorDeRonda;
@@ -46,10 +47,10 @@ class RegisterMoveThread extends Thread {
     private ObjectInputStream in;
     private DataOutputStream out;
     private Socket socket;
-    private Set<Player> juegoActual;
+    private HashMap<String, Player> juegoActual;
     private Player ganadorDeRonda;
     private int maxScore;
-    public RegisterMoveThread(Socket socket, Set<Player> juegoActual, Player ganadorDeRonda, int maxScore) {
+    public RegisterMoveThread(Socket socket, HashMap<String, Player> juegoActual, Player ganadorDeRonda, int maxScore) {
         try {
             this.juegoActual = juegoActual;
             this.ganadorDeRonda = ganadorDeRonda;
@@ -95,15 +96,5 @@ class RegisterMoveThread extends Thread {
             System.out.println(e);
         }
 
-    }
-
-    private boolean alguienGano(Set<Player> juegoActual) {
-        Iterator<Player> iterator = juegoActual.iterator();
-        while (iterator.hasNext()) {
-            Player player = iterator.next();
-            if (player.getScore() >= maxScore)
-                return true;
-        }
-        return false;
     }
 }
