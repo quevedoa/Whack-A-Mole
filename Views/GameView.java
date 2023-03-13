@@ -148,6 +148,7 @@ public class GameView {
                         ganadorDeRondaLabel.setText("Ronda " + ronda + " la ganó " + winnerPlayer.getUsername());
                         scoreLabel.setText("Juegos Ganados: " + this.player.getJuegosGanados() + " | Score: " + this.player.getScore());
                     }
+                    clearCheckboxes(checkboxes);
                 }
             } catch (Exception e) {
                 System.out.println(e);

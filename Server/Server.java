@@ -17,10 +17,11 @@ public class Server {
     public String topoTopico = "TOPO_TOPIC";
     public String moveQueue = "MOVE_QUEUE";
     public String winnerTopic = "WINNER_TOPIC";
-    private int maxScore = 3;
+    private int maxScore;
 
-    public Server(int rows, int columns) {
+    public Server(int rows, int columns, int moleDelay, int maxScore) {
         this.juegoActual = new HashMap<>();
+        this.maxScore = maxScore;
 
         try {
             // Echamos a andar hilo que lee los movimientos
@@ -32,7 +33,7 @@ public class Server {
             roundWinnerThread.start();
 
             // Echamos a andar hilo que solo hace topos
-            MoleThread moleThread = new MoleThread(activeMQURL, topoTopico, rows, columns);
+            MoleThread moleThread = new MoleThread(activeMQURL, topoTopico, rows, columns, moleDelay);
             moleThread.start();
 
             ServerSocket loginServerSocket = new ServerSocket(loginSocketPort);
@@ -48,6 +49,6 @@ public class Server {
     }
 
     public static void main(String args[]) {
-        new Server(2,2);
+        new Server(2,2, 1000, 3);
     }
 }

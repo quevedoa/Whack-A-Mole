@@ -73,6 +73,8 @@ class RegisterMoveThread extends Thread {
             movimiento.setObject(movimientoTupla);
             messageProducer.send(movimiento);
 
+            connection.close();
+
         } catch (Exception e) {
             System.out.println(e);
         }

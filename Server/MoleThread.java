@@ -13,12 +13,14 @@ public class MoleThread extends Thread {
     private int numTopo;
     private int row;
     private int col;
+    private int moleDelay;
     private Random rand = new Random();
-    public MoleThread(String url, String topicSubject, int row, int col) {
+    public MoleThread(String url, String topicSubject, int row, int col, int moleDelay) {
         this.url = url;
         this.topicSubject = topicSubject;
         this.row = row;
         this.col = col;
+        this.moleDelay = moleDelay;
         this.numTopo = 0;
     }
 
@@ -44,7 +46,7 @@ public class MoleThread extends Thread {
                 mole.setObject(nextMove);
                 messageProducer.send(mole);
 
-                Thread.sleep(3000);
+                Thread.sleep(moleDelay);
                 numTopo = numTopo+1;
             }
 
